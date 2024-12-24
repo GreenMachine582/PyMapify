@@ -1,0 +1,8 @@
+cff-version: "0.0.1"
+date-released: 2024-09
+message: "If you use this software, please cite it using these metadata."
+title: "PyMapify: Transform a CSV file containing Google Maps links into an interactive map"
+url: "https://github.com/GreenMachine582/PyMapify"
+authors:
+  - family-names: Johnson
+    given-names: Matthew
