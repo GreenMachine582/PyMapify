@@ -27,6 +27,10 @@ class Env:
         self.instance: str = ""
         self.version: str = ""
 
+        # Database
+        self.conn = None
+        self.cur = None
+
         # Map
         self.mapify = None
 

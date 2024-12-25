@@ -1,6 +1,7 @@
 folium~=0.19.2
 geopy~=2.4.1
 pandas~=2.2.3
+psycopg2~=2.9.10
 requests~=2.32.3
 setuptools~=67.5.1
 urllib3~=2.3.0
