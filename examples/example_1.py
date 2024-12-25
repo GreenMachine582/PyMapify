@@ -3,7 +3,6 @@ import argparse
 import logging
 import sys
 import time
-import traceback
 from os import path as os_path
 
 from src import pymapify
@@ -42,17 +41,10 @@ def main():
     _logger.info(f"Starting {pymapify.version.PROJECT_NAME_TEXT}.")
 
     try:
-        mapify = pymapify.Map(env)
-        mapify.loadMapData(MODULE_DIR + "/destinations.csv")
-        mapify.plotMap()
-        mapify.saveMap(MODULE_DIR + "/map.html")
-    except Exception as e:
-        _logger.exception(e)
-        sys_trace = sys.exc_info()
-        error_track = traceback.TracebackException(
-            sys_trace[0], sys_trace[1], sys_trace[2], limit=None).stack[0].line
-        _logger.error(error_track)
-        return Exception(e)
+        conn, cur = pymapify.database.connect(env)
+    except pymapify.DatabaseNotFoundError:
+        pymapify.database.createDatabase(env, 1)
+        conn, cur = pymapify.database.connect(env)
     finally:
         close()
 
