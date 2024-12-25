@@ -7,6 +7,7 @@ from os import listdir, makedirs, path, remove as os_remove
 
 _logger = logging.getLogger(__name__)
 logging.getLogger("requests").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 
 def _validateLogLevel(log_level: str):
