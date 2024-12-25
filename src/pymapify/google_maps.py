@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import logging
 import re
+
 import requests
+from urllib.parse import unquote
 
 _logger = logging.getLogger(__name__)
 
@@ -24,6 +26,7 @@ def extractPlaceName(full_url: str) -> str:
     if not match:
         return ""
     place_name = match.group(1).replace("+", " ")  # Decode "+" into spaces
+    place_name = unquote(place_name)  # Decode the percent-encoded string
     return place_name
 
 
