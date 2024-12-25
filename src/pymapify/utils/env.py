@@ -51,18 +51,18 @@ class Env:
     def __call__(self, *args, **kwargs):
         """Update the Env with given attributes."""
         for key, value in kwargs.items():
-            if hasattr(self, key):
-                if key == "project_dir":
-                    # Validate given project dir, fallback to root dir
-                    if not value:
-                        value = self.PROJECT_DIR
-                    elif not os_path.exists(os_path.abspath(value)):  # Ensure given project dir exists
-                        raise FileExistsError(f"No such file or directory: '{os_path.abspath(value)}'")
-                    else:
-                        value = os_path.abspath(value)
-                setattr(self, key, value)
-            else:
+            if not hasattr(self, key):
                 _logger.warning(f"Unexpected key, got: {key}")
+                continue
+            if key == "project_dir":
+                # Validate given project dir, fallback to root dir
+                if not value:
+                    value = self.PROJECT_DIR
+                elif not os_path.exists(os_path.abspath(value)):  # Ensure given project dir exists
+                    raise FileExistsError(f"No such file or directory: '{os_path.abspath(value)}'")
+                else:
+                    value = os_path.abspath(value)
+            setattr(self, key, value)
 
     def __str__(self) -> str:
         return f"Env(project='{self.project_name_text}', version='{self.version}')"
@@ -78,3 +78,18 @@ class Env:
 
     def __hash__(self):
         return object.__hash__(self)
+
+    def __del__(self):
+        """Ensure resources are cleaned up."""
+        if self.cur:
+            try:
+                self.cur.close()
+                _logger.debug("Database cursor closed.")
+            except Exception as e:
+                _logger.error(f"Failed to close cursor: {e}")
+        if self.conn:
+            try:
+                self.conn.close()
+                _logger.debug("Database connection closed.")
+            except Exception as e:
+                _logger.error(f"Failed to close connection: {e}")
