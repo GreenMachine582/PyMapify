@@ -75,20 +75,6 @@ class TestConfig(unittest.TestCase):
         with self.assertRaises(FileExistsError):
             Config(self.invalid_config_path)
 
-    def test_split_path_into_dir_and_name(self):
-        """Test splitting a path into directory and filename."""
-        config = Config(self.valid_config_path)
-        directory, filename = config._splitPathIntoDirAndName(self.valid_config_path)
-        self.assertEqual(directory, os_path.dirname(self.valid_config_path))
-        self.assertEqual(filename, os_path.basename(self.valid_config_path))
-
-    def test_split_invalid_path(self):
-        """Test handling of an invalid path format."""
-        config = Config(self.valid_config_path)
-        self.assertFalse(config._splitPathIntoDirAndName('invalid_config.txt'))
-        self.assertFalse(config._splitPathIntoDirAndName(''))
-        self.assertFalse(config._splitPathIntoDirAndName(False))
-
     @patch('builtins.open', new_callable=mock_open, read_data=CONFIG_CONTENT)
     @patch('src.pymapify.utils.config._logger')
     def test_save_config(self, mock_logger, mock_file):
@@ -117,16 +103,6 @@ class TestConfig(unittest.TestCase):
         config_path = joinPath(os_path.abspath(TESTS_DIR + '/test_data'), config.DEFAULT_PROFILE_NAME, ext=config.CONFIG_EXT)
         mock_logger.info.assert_any_call(f"Config saved to '{config_path}'")
 
-    def test_unload_config(self):
-        """Test removing section attributes from Config."""
-        config = Config(self.valid_config_path)
-        config._config = {'default': {'Test': True}, 'Section1': {'param1': 10}}
-        config._sections = ['default', 'Section1']
-        config.unloadConfig()
-        self.assertFalse(hasattr(config, 'default'))
-        self.assertFalse(hasattr(config, 'Section1'))
-        self.assertEqual(config._sections, [])
-
     @patch('builtins.open', new_callable=mock_open, read_data=CONFIG_CONTENT)
     def test_load_section(self, mock_file):
         """Test loading a specific section from a config file."""
@@ -154,16 +130,6 @@ class TestConfig(unittest.TestCase):
 
     @patch('builtins.open', new_callable=mock_open, read_data=CONFIG_CONTENT)
     @patch('os.path.exists', return_value=True)
-    def test_set_config(self, mock_exists, mock_file):
-        """Test setting configuration attributes."""
-        config = Config(self.valid_config_path)
-        new_config = {'default': {'NewParam': 123}}
-        config.setConfig(new_config)
-        self.assertEqual(config.get('default'), {'Test': False, 'NewParam': 123})
-        self.assertEqual(str(config), "{'default': {'Test': False, 'NewParam': 123}, 'Section1': {'param1': 10, 'param2': 'value'}}")
-
-    @patch('builtins.open', new_callable=mock_open, read_data=CONFIG_CONTENT)
-    @patch('os.path.exists', return_value=True)
     def test_load_config_with_env(self, mock_exists, mock_file):
         """Test loading of a valid config file with Env."""
         config = Env(self.valid_config_path, project_name="test").config
@@ -179,19 +145,54 @@ class TestConfig(unittest.TestCase):
         self.assertIsInstance(config, Config)
         self.assertEqual(config.filename, 'test')
 
+
+class TestValidConfig(unittest.TestCase):
+
+    @patch('builtins.open', new_callable=mock_open, read_data=CONFIG_CONTENT)
+    @patch('os.path.exists', return_value=True)
+    def setUp(self, mock_exists, mock_file):
+        # Prepare necessary paths and values for tests
+        self.config_path = os_path.abspath(TESTS_DIR + '/non_existent.conf')
+        self.config = Config(self.config_path)
+
+    def test_split_path_into_dir_and_name(self):
+        """Test splitting a path into directory and filename."""
+        directory, filename = self.config._splitPathIntoDirAndName(self.config_path)
+        self.assertEqual(directory, os_path.dirname(self.config_path))
+        self.assertEqual(filename, os_path.basename(self.config_path))
+
+    def test_split_invalid_path(self):
+        """Test handling of an invalid path format."""
+        self.assertFalse(self.config._splitPathIntoDirAndName('invalid_config.txt'))
+        self.assertFalse(self.config._splitPathIntoDirAndName(''))
+        self.assertFalse(self.config._splitPathIntoDirAndName(False))
+
+    def test_unload_config(self):
+        """Test removing section attributes from Config."""
+        self.config._config = {'default': {'Test': True}, 'Section1': {'param1': 10}}
+        self.config._sections = ['default', 'Section1']
+        self.config.unloadConfig()
+        self.assertFalse(hasattr(self.config, 'default'))
+        self.assertFalse(hasattr(self.config, 'Section1'))
+        self.assertEqual(self.config._sections, [])
+
+    def test_set_config(self):
+        """Test setting configuration attributes."""
+        new_config = {'default': {'NewParam': 123}}
+        self.config.setConfig(new_config)
+        self.assertEqual(self.config.get('default'), {'Test': False, 'NewParam': 123})
+        self.assertEqual(str(self.config), "{'default': {'Test': False, 'NewParam': 123}, 'Section1': {'param1': 10, 'param2': 'value'}}")
+
     @patch('src.pymapify.utils.config._logger')
     @patch('src.pymapify.utils.addEnvPath')
     def test_add_env_paths_success(self, mock_addEnvPath, mock_logger):
         """Test adding env paths success."""
-        env_paths = {
+        self.config.env_paths = {
             "PATH1": "/some/path1",
             "PATH2": "/some/path2",
         }
 
-        config = Config(self.valid_config_path)
-        config.env_paths = env_paths
-
-        config.addEnvPaths()
+        self.config.addEnvPaths()
 
         mock_addEnvPath.assert_any_call("/some/path1", env_name="PATH1")
         mock_addEnvPath.assert_any_call("/some/path2", env_name="PATH2")
@@ -201,11 +202,20 @@ class TestConfig(unittest.TestCase):
     @patch('src.pymapify.utils.addEnvPath')
     def test_add_env_paths_no_env_paths(self, mock_addEnvPath, mock_logger):
         """Test adding env paths without env paths."""
-        config = Config(self.valid_config_path)
-        self.assertFalse(hasattr(config, "env_paths"))
+        self.assertFalse(hasattr(self.config, "env_paths"))
 
-        config.addEnvPaths()
+        self.config.addEnvPaths()
 
         mock_addEnvPath.assert_not_called()
         mock_logger.info.assert_not_called()
 
+    def test_loadSection_handles_SyntaxError(self):
+        """Test loading a section with an invalid eval expression."""
+        section_name = "test_section"
+        parser = ConfigParser()
+        parser.add_section(section_name)
+
+        parser.set(section_name, "key_with_syntax_error", "['invalid_python_code@')")
+        result = self.config.loadSection("", parser, section_name)
+        self.assertIn("key_with_syntax_error", result)
+        self.assertEqual(result["key_with_syntax_error"], "['invalid_python_code@')")
