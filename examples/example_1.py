@@ -30,6 +30,7 @@ def main():
 
     project_name = pymapify.version.PROJECT_NAME
 
+    # Determine default config and logs paths if not provided
     if not config_path:
         config_filename = f"{project_name}{'' if not instance else '_' + instance}.conf"
         config_path = f"configs/{config_filename}"
