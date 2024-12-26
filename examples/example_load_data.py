@@ -104,14 +104,23 @@ def loadDataFromCSV(env, csv_file_path: str, target_version: int):
             if not row['close_time']:
                 row['close_time'] = None
 
+            # Don't add place if it already exists
+            env.cur.execute(
+                "SELECT id FROM place WHERE link = %s "
+                "LIMIT 1;"
+                , (row['link'],))
+            place = env.cur.fetchone()
+            if place is not None:
+                _logger.debug(f"Place '{row['place_name']}' has already been loaded.")
+                continue
+
             # Relate to existing marker group or create one
             marker_id = getMarker(env, row, env.config['pymapify']['group_threshold'])
 
             # Insert the row into the place table
             cur.execute(
                 "INSERT INTO place (link, latitude, longitude, name, open_time, close_time, marker_id) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s) "
-                "ON CONFLICT (link) DO NOTHING;"
+                "VALUES (%s, %s, %s, %s, %s, %s, %s);"
             , (row['link'], row['latitude'], row['longitude'], row['place_name'], row['open_time'], row['close_time'],
                marker_id))
 
