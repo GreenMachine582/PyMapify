@@ -17,11 +17,12 @@
 This Python project aims to transform a CSV file containing Google Maps links into an interactive map. It extracts the destinations' geographic coordinates from the links and plots them on an interactive map using visualisation libraries like Folium. The map allows users to explore their destinations, view details, and save the map as an HTML file for sharing or further analysis.
 
 ## Key Features
-Parse Google Maps links to extract latitude and longitude.
-Read and process CSV files containing destination data.
-Create interactive maps with markers for each destination.
-Save maps as HTML for easy sharing or embedding.
-Optional customisation for marker icons, map themes, and more.
+* Parse Google Maps links to extract latitude and longitude.
+* Read and process CSV files containing destination data.
+* Create interactive maps with markers for each destination.
+* Save maps as HTML for easy sharing or embedding.
+* Store data in a persistent database.
+* Optional customisation for marker icons.
 
 ## Testing
 PyMapify includes a comprehensive suite of unit tests to ensure the reliability and stability of its features. Tests cover various aspects of the core functionality.
