@@ -105,7 +105,7 @@ def loadDataFromCSV(env, csv_file_path: str, target_version: int):
                 row['close_time'] = None
 
             # Relate to existing marker group or create one
-            marker_id = getMarker(env, row)
+            marker_id = getMarker(env, row, env.config['pymapify']['group_threshold'])
 
             # Insert the row into the place table
             cur.execute(
