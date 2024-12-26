@@ -82,15 +82,10 @@ def loadDataFromCSV(env, csv_file_path: str, target_version: int):
     try:
         # Ensure the database connection is available
         try:
-            conn, cur = pymapify.database.connect(env, autocommit=False)
+            conn, cur = pymapify.database.connect(env, enforce_version=target_version, autocommit=False)
         except pymapify.DatabaseNotFoundError:
             pymapify.database.createDatabase(env, target_version)
             conn, cur = pymapify.database.connect(env, autocommit=False)
-
-        # Check if the current database schema version matches the target version
-        db_version = pymapify.database.getSchemaVersion(cur)
-        if db_version != target_version:
-            raise Exception(f"DB version is {db_version}, however the target version is {target_version}.")
 
         # Load the CSV file, ensuring all data is read as strings
         df = pd.read_csv(csv_file_path, dtype=str, engine='python', sep=";;")

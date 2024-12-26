@@ -30,7 +30,7 @@ class DataPopulationError(DatabaseError):
     pass
 
 
-def _connect(env=None, autocommit: bool = True, **params):
+def _connect(env=None, autocommit: bool = True, **params) -> tuple:
     """ Establish a connection to the PostgreSQL database and return the connection and cursor objects. """
     conn = psycopg2.connect(**params)
     conn.autocommit = autocommit
@@ -41,14 +41,30 @@ def _connect(env=None, autocommit: bool = True, **params):
     return conn, cur
 
 
-def connect(env, **kwargs):
+def enforceSchemaVersion(cur, database_schema_dir: str = "", version: int = -1):
+    """ Enforce the current database schema version matches the target version. """
+    assert version and isinstance(version, int), "version must be an integer starting from 1 or -1 for latest version."
+    db_version = getSchemaVersion(cur)
+    if version == -1:
+        if not database_schema_dir:
+            raise ValueError("database_schema_dir must be provided for latest version.")
+        version = getLatestAvailableVersion(database_schema_dir)  # DB version is latest available version
+    if db_version != version:
+        raise DatabaseError(f"DB version is {db_version}, however the target version is "
+                            f"{version}.")
+
+
+def connect(env, enforce_version: int = None, **kwargs) -> tuple:
     """ Connect to the project database server. """
     params = env.config["database"].copy()
     params.update(kwargs)
     _logger.info(f"Connecting to the {env.project_name_text} database...")
 
     try:
-        return _connect(env, **params)
+        (conn, cur) = _connect(env, **params)
+        if enforce_version:
+            enforceSchemaVersion(cur, os_path.join(env.PROJECT_DIR, "database", ""), enforce_version)
+        return conn, cur
     except psycopg2.OperationalError as db_error:
         if f'database "{params.get("dbname")}" does not exist' in db_error.args[0]:
             _logger.error(f"Database does not exist or is inaccessible: {db_error}")
