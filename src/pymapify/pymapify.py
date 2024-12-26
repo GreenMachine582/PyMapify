@@ -96,7 +96,7 @@ class Map:
             marker_popup_text = unquote(marker[1])  # Decode the percent-encoded string
             marker_icon = None
             if marker[4]:  # Create icon for marker
-                self._createIcon(marker[4])
+                marker_icon = self._createIcon(marker[4])
             folium.Marker(location=marker[2:4], icon=marker_icon, popup=marker_popup_text).add_to(self.map)
         _logger.info(f"Map created with '{len(marker_results)}' marker{'s' if len(marker_results) > 1 else ''}.")
 
