@@ -4,6 +4,7 @@ import logging
 from os import path as os_path
 
 import folium
+from urllib.parse import unquote
 
 from .version import PROJECT_NAME
 from .tools import database
@@ -92,10 +93,11 @@ class Map:
 
         # Add markers to map
         for marker in marker_results:
+            marker_popup_text = unquote(marker[1])  # Decode the percent-encoded string
             marker_icon = None
             if marker[4]:  # Create icon for marker
                 self._createIcon(marker[4])
-            folium.Marker(location=marker[2:4], icon=marker_icon, popup=marker[1]).add_to(self.map)
+            folium.Marker(location=marker[2:4], icon=marker_icon, popup=marker_popup_text).add_to(self.map)
         _logger.info(f"Map created with '{len(marker_results)}' marker{'s' if len(marker_results) > 1 else ''}.")
 
     def _renderMap(self, title: str = "") -> str:
