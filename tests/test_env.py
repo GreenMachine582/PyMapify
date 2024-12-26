@@ -1,6 +1,7 @@
 import unittest
+import gc
 from os import path as os_path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from src.pymapify.utils.env import Env
 
@@ -116,6 +117,47 @@ class TestEnv(unittest.TestCase):
         env_instance2 = Env(self.config_path, project_name="test_project_2", version="1.0.1")
         self.assertEqual(hash(env_instance1), hash(env_instance1), "Hashes of the same object should be equal")
         self.assertNotEqual(hash(env_instance1), hash(env_instance2), "Hashes of different objects should not be equal")
+
+
+class TestEnvDatabase(unittest.TestCase):
+
+    @patch("src.pymapify.utils.env.Config")
+    @patch("src.pymapify.utils.env.os_path.exists", return_value=True)
+    def setUp(self, mock_exist_path, mock_config):
+        self.env = Env(config_path="dummy_path")
+
+    @patch('src.pymapify.utils.env._logger')
+    def test_env_cleanup_on_deletion(self, mock_logger):
+        # Mock a database connection and cursor
+        mock_conn = MagicMock()
+        mock_cur = MagicMock()
+
+        self.env.conn = mock_conn
+        self.env.cur = mock_cur
+        del self.env
+        gc.collect()  # Force garbage collection
+
+        # Ensure cursor and connection are closed
+        mock_cur.close.assert_called_once()
+        mock_conn.close.assert_called_once()
+
+    @patch('src.pymapify.utils.env._logger')
+    def test_env_cleanup_handles_exceptions(self, mock_logger):
+        """Env database exceptions should be handled correctly when closing."""
+        mock_conn = MagicMock()
+        mock_cur = MagicMock()
+
+        mock_conn.close.side_effect = Exception("Connection close error")
+        mock_cur.close.side_effect = Exception("Cursor close error")
+
+        self.env.conn = mock_conn
+        self.env.cur = mock_cur
+        del self.env
+        gc.collect()  # Force garbage collection
+
+        # Ensure exceptions during close are logged
+        mock_logger.error.assert_any_call("Failed to close cursor: Cursor close error")
+        mock_logger.error.assert_any_call("Failed to close connection: Connection close error")
 
 
 if __name__ == "__main__":

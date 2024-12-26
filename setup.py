@@ -39,9 +39,9 @@ setup(
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.13",
-        "Topic :: Software Development :: Maps",
+        "Topic :: Software Development :: Maps :: Database",
     ],
-    keywords="python, maps",
+    keywords="python, maps, database",
     python_requires=">=3.10.0",
     install_requires=install_requires,
 )

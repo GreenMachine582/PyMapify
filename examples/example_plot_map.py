@@ -1,3 +1,4 @@
+from __future__ import annotations
 
 import argparse
 import logging
@@ -22,7 +23,11 @@ def close():
     time.sleep(2)
     sys.exit(f"Thanks for using {pymapify.version.PROJECT_NAME_TEXT}")
 
+
 def main():
+    """
+    Main function to load the environment, parse command-line arguments, and execute the data loading process.
+    """
     args = parser.parse_args()
     instance: str = args.instance
     config_path: str = args.config_path
@@ -38,14 +43,21 @@ def main():
         logs_instance_folder = f"{project_name}{'' if not instance else '_' + instance}"
         logs_dir = f"logs/{logs_instance_folder}"
 
+    config_path = os_path.abspath(config_path)
+    logs_dir = os_path.abspath(logs_dir)
+
+    # Load environment and configurations
     env = pymapify.loadEnv(config_path, project_dir=MODULE_DIR, instance=instance, logs_dir=logs_dir)
-    _logger.info(f"Starting {pymapify.version.PROJECT_NAME_TEXT}.")
+    _logger.info(f"Starting {env.project_name_text}.")
 
     try:
-        conn, cur = pymapify.database.connect(env)
-    except pymapify.DatabaseNotFoundError:
-        pymapify.database.createDatabase(env, 1)
-        conn, cur = pymapify.database.connect(env)
+        # Plot markers to a map from the database
+        mapify = pymapify.Map(env)
+        mapify.plotMap()
+        mapify.saveMap(MODULE_DIR + "/map.html")
+    except Exception as e:
+        _logger.error(f"An error occurred while loading data from CSV: {e}")
+        raise
     finally:
         close()
 

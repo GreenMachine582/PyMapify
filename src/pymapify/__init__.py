@@ -4,6 +4,8 @@ import logging
 import os
 
 from . import utils, version, google_maps
+from .tools import database
+from .tools.database import DatabaseError, DatabaseNotFoundError, SchemaFileNotFoundError, SchemaApplicationError
 from .pymapify import Map
 
 
