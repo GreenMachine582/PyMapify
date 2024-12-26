@@ -110,7 +110,8 @@ def loadDataFromCSV(env, csv_file_path: str, target_version: int):
             # Insert the row into the place table
             cur.execute(
                 "INSERT INTO place (link, latitude, longitude, name, open_time, close_time, marker_id) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s)"
+                "VALUES (%s, %s, %s, %s, %s, %s, %s) "
+                "ON CONFLICT (link) DO NOTHING;"
             , (row['link'], row['latitude'], row['longitude'], row['place_name'], row['open_time'], row['close_time'],
                marker_id))
 

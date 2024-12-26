@@ -37,7 +37,8 @@ BEGIN
             name VARCHAR(150) NOT NULL DEFAULT 'Unknown',
             open_time TIME,
             close_time TIME,
-            marker_id INTEGER REFERENCES marker(id)
+            marker_id INTEGER REFERENCES marker(id),
+            UNIQUE (link)
         );
 
         -- Insert Initial Version Record
