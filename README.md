@@ -24,6 +24,8 @@ This Python project aims to transform a CSV file containing Google Maps links in
 * Store data in a persistent database.
 * Optional customisation for marker icons.
 
+![Example Map](examples/map.png)
+
 ## Testing
 PyMapify includes a comprehensive suite of unit tests to ensure the reliability and stability of its features. Tests cover various aspects of the core functionality.
 

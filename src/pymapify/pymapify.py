@@ -110,18 +110,9 @@ class Map:
                                                   f"""<head>\n    \n    <title>{title}</title>\n<meta""")
         # TODO: set favicon
 
+        # Make popup wider to fit longer texts
         modified_html = modified_html.replace("""L.popup({\n  "maxWidth": "100%",\n});""",
                                               """L.popup({\n  "width": "100px",\n});""")
-        modified_html = modified_html.replace("""</html>""",
-                                              """<script>
-        document.addEventListener("DOMContentLoaded", function () {
-            // Find the element by Class Names and remove it
-            const elementToRemove = document.getElementsByClassName('leaflet-control-attribution leaflet-control');
-            if (elementToRemove) {
-                $('.leaflet-control-attribution').remove();
-            }
-        });
-    </script>\n</html>""")
         _logger.debug("HTML map has been modified.")
         return modified_html
 
