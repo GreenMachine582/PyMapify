@@ -167,6 +167,30 @@ def runDataPopulationScript(database_dir: str, from_version: int, to_version: in
         raise DataPopulationError("An error occurred during data population. Transaction rolled back.")
 
 
+def dropDatabase(params: dict):
+    db_name = params.get('dbname')
+    _logger.warning(f"Attempting to drop database '{db_name}' due to failure...")
+
+    try:
+        # Connect with autocommit set immediately
+        drop_conn = psycopg2.connect(
+            dbname='postgres',
+            user=params.get('user'),
+            host=params.get('host'),
+            port=params.get('port'),
+            password=params.get('password'),
+        )
+        drop_conn.set_session(autocommit=True)
+
+        with drop_conn.cursor() as drop_cur:
+            drop_cur.execute(f"DROP DATABASE IF EXISTS {db_name}")
+            _logger.info(f"Database '{db_name}' dropped successfully.")
+
+        drop_conn.close()
+    except Exception as drop_error:
+        _logger.error(f"Failed to drop database '{db_name}': {drop_error}")
+
+
 def createDatabase(env, version: int = None):
     """Create the database from the newest or specified version with proper locking."""
     params = env.config["database"]
@@ -233,6 +257,7 @@ def createDatabase(env, version: int = None):
         if conn is not None:
             conn.close()  # Close the connection
             _logger.debug(f"Database connection closed.")
+        dropDatabase(params)
 
 
 def upgradeDatabase(env, from_version: int, to_version: int):
