@@ -91,6 +91,33 @@ def getLatestAvailableVersion(database_dir: str):
     return max(versions)
 
 
+def injectAuditColumns(cursor):
+    """Inject standard audit columns into all applicable tables if they are missing."""
+    audit_columns = {
+        'create_datetime': "TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL",
+        'write_datetime': "TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL",
+        'create_user_id': "INTEGER REFERENCES users(id)",
+        'write_user_id': "INTEGER REFERENCES users(id)"
+    }
+
+    # Get all user tables except versioning
+    cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
+    table_names = {row[0] for row in cursor.fetchall()} - {'schema_version'}
+
+    for table in table_names:
+        for column, definition in audit_columns.items():
+            cursor.execute("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = %s AND column_name = %s
+            """, (table, column))
+            if not cursor.fetchone():
+                _logger.debug(f"Adding missing column '{column}' to table '{table}'...")
+                cursor.execute(f"""
+                    ALTER TABLE {table}
+                    ADD COLUMN {column} {definition}
+                """)
+
+
 def applySchemaVersion(database_dir: str, cursor, from_version: int, to_version: int):
     """Apply the schema for the specified version, handling both create and upgrade scenarios."""
     method = "upgrade" if from_version else "create"
@@ -107,6 +134,9 @@ def applySchemaVersion(database_dir: str, cursor, from_version: int, to_version:
         with open(schema_file, 'r') as file:
             cursor.execute(file.read())
         _logger.debug(f"{method.capitalize()} schema for {version_text} applied successfully.")
+
+        # Inject create/write datetime columns if missing
+        injectAuditColumns(cursor)
     except FileNotFoundError:
         _logger.error(f"{method.capitalize()}  schema file {schema_file} not found.")
         raise SchemaFileNotFoundError(f"Schema file {schema_file} not found.")

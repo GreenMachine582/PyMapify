@@ -36,14 +36,22 @@ class TestDatabaseFunctions(unittest.TestCase):
     def test_apply_schema_version_create(self, mock_file):
         """Test applySchemaVersion for creating a schema."""
         applySchemaVersion(os_path.abspath('/mock/project/database'), self.env.cur, 0, 1)
-        self.env.cur.execute.assert_called_once_with("SQL COMMAND")
+        self.assertEqual(self.env.cur.execute.call_count, 2)
+        self.env.cur.execute.assert_any_call("SQL COMMAND")
+        self.env.cur.execute.assert_any_call(
+            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
+
         mock_file.assert_called_with(os_path.abspath('/mock/project/database/v1_create_schema.sql'), 'r')
 
     @patch('builtins.open', new_callable=mock_open, read_data="SQL UPGRADE COMMAND")
     def test_apply_schema_version_upgrade(self, mock_file):
         """Test applySchemaVersion for upgrading schema."""
         applySchemaVersion(os_path.abspath('/mock/project/database'), self.env.cur, 1, 2)
-        self.env.cur.execute.assert_called_once_with("SQL UPGRADE COMMAND")
+        self.assertEqual(self.env.cur.execute.call_count, 2)
+        self.env.cur.execute.assert_any_call("SQL UPGRADE COMMAND")
+        self.env.cur.execute.assert_any_call(
+            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
+
         mock_file.assert_called_with(os_path.abspath('/mock/project/database/v1_to_v2_upgrade_schema.sql'), 'r')
 
     @patch('os.path.exists', return_value=True)
