@@ -85,6 +85,32 @@ class TestDatabaseFunctions(unittest.TestCase):
         mock_run_data.assert_called_with(os_path.join(os_path.abspath('/mock/project/database/'), ''), 0, 2, self.env)
 
     @patch('src.pymapify.tools.database._connect')
+    @patch('src.pymapify.tools.database.getLatestAvailableVersion', return_value=2)
+    @patch('src.pymapify.tools.database.applySchemaVersion')
+    @patch('src.pymapify.tools.database.runDataPopulationScript')
+    @patch('src.pymapify.tools.database.dropDatabase')
+    def test_create_database_failure_triggers_drop(self, mock_drop_db, mock_run_data, mock_apply_schema,
+                                                   mock_latest_version, mock_connect):
+        """Test that the database is dropped if schema application fails."""
+        # Setup: Mock connection and cursor
+        mock_conn = MagicMock()
+        mock_cur = MagicMock()
+        mock_connect.return_value = (mock_conn, mock_cur)
+
+        # Simulate schema application failure
+        mock_apply_schema.side_effect = Exception("Simulated schema error")
+
+        with self.assertRaises(DatabaseError):
+            createDatabase(self.env)
+
+        # Verify that rollback and close were called
+        mock_conn.rollback.assert_called_once()
+        mock_conn.close.assert_called()  # Should have two, one for rollback and one for db drop conn
+
+        # Ensure dropDatabase was called with correct parameters
+        mock_drop_db.assert_called_once_with(self.env.config["database"])
+
+    @patch('src.pymapify.tools.database._connect')
     @patch('src.pymapify.tools.database.applySchemaVersion')
     @patch('src.pymapify.tools.database.runDataPopulationScript')
     def test_upgrade_database(self, mock_run_data, mock_apply_schema, mock_connect):

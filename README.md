@@ -3,7 +3,7 @@
 ![Python version](https://img.shields.io/badge/python-3.10%20--%203.12-blue.svg)
 ![Codecov](https://codecov.io/gh/GreenMachine582/pymapify/branch/master/graph/badge.svg)
 ![GitHub release](https://img.shields.io/github/v/release/GreenMachine582/pymapify?include_prereleases)
-[![Commits](https://img.shields.io/github/commits-since/GreenMachine582/pymapify/v0.1.0-alpha.svg)](https://github.com/GreenMachine582/pymapify/compare/v0.1.0-alpha...dev?include_prereleases)
+[![Commits](https://img.shields.io/github/commits-since/GreenMachine582/pymapify/v1.0.0.svg)](https://github.com/GreenMachine582/pymapify/compare/v1.0.0...dev?include_prereleases)
 
 ## Table of Contents
 - [Introduction](#introduction)

@@ -247,17 +247,18 @@ def createDatabase(env, version: int = None):
         if conn:
             conn.rollback()  # Rollback if an error occurs
             _logger.debug("Transaction rolled back due to error.")
+        dropDatabase(params)
         raise
     except (Exception, psycopg2.DatabaseError) as error:
         _logger.error(f"Error: {error}")
         if conn:
             conn.rollback()  # Rollback on generic error
+        dropDatabase(params)
         raise DatabaseError(f"An error occurred: {error}")
     finally:
         if conn is not None:
             conn.close()  # Close the connection
             _logger.debug(f"Database connection closed.")
-        dropDatabase(params)
 
 
 def upgradeDatabase(env, from_version: int, to_version: int):
